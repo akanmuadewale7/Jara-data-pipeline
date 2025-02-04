@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  airflow-webserver:  # Changed from 'webserver' to 'airflow-webserver'
+    build: .
+    command: ["airflow", "webserver"]
+    restart: always
+    depends_on:
+      - postgres
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./test:/opt/airflow/tests
+      - ./scripts:/opt/airflow/scripts 
+      - ~/.aws:/home/airflow/.aws:ro
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AWS_PROFILE=default
+    
+    ports:
+      - "8080:8080"
+
+  airflow-scheduler:  # Changed from 'scheduler' to 'airflow-scheduler'
+    build: .
+    command: ["airflow", "scheduler"]
+    restart: always
+    depends_on:
+      - postgres
+      - airflow-webserver
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts 
+      - ~/.aws:/home/airflow/.aws:ro
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AWS_PROFILE=default
+
+volumes:
+  postgres_data: {}

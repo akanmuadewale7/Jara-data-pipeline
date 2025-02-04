@@ -1,0 +1,7 @@
+apache-airflow
+boto3
+pandas
+matplotlib
+pytest
+moto
+s3fs # Downgrade s3fs to a version compatible with boto3
